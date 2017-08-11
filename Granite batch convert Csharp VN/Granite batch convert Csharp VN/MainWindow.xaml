@@ -6,6 +6,7 @@
         <TextBox x:Name="tboxSelectedFolder" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" VerticalAlignment="Top" Width="417" Margin="10,10,0,0"/>
         <Button x:Name="butSelectFolder" Content="Select Folder" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="432,10,0,0" Height="23" Click="butSelectFolder_Click"/>
         <Button x:Name="butEngage" Content="Engage" HorizontalAlignment="Left" VerticalAlignment="Top" Width="497" Margin="10,38,0,0" Click="butEngage_Click"/>
+        <TextBlock x:Name="MyTextBlock" HorizontalAlignment="Left" Margin="10,63,0,0" TextWrapping="Wrap" Text="Test Change" VerticalAlignment="Top" Height="18" Width="497"/>
 
     </Grid>
 </Window>

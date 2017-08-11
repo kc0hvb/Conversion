@@ -16,6 +16,7 @@ using System.Data;
 using System.Data.OleDb;
 using System.ComponentModel;
 using System.IO;
+using System.Windows.Forms;
 
 namespace Granite_batch_convert_Csharp_VN
 {
@@ -26,11 +27,27 @@ namespace Granite_batch_convert_Csharp_VN
     {
         public BackgroundWorker backWorker;
         private string resourceITPDatabase = string.Empty;
-
+        private string myValue;
+        public string MyValue
+        {
+            get { return myValue; }
+            set
+            {
+                myValue = value;
+                RaisePropertyChanged(myValue);
+            }
+        }
         public MainWindow()
         {
             InitializeComponent();
         }
+        
+        private void RaisePropertyChanged(string propName)
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propName));
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private void butSelectFolder_Click(object sender, RoutedEventArgs e)
         {
@@ -42,22 +59,44 @@ namespace Granite_batch_convert_Csharp_VN
                 if (folderPath[folderPath.Length - 1] != '\\') { folderPath += "\\"; }
                 tboxSelectedFolder.Text = folderPath;
             }
+            myValue = ("Please select engage to select ITpipes Database.").ToString();
+        }
+
+        void wait(int ms)
+        {
+            System.Threading.Thread.Sleep(ms);
         }
 
         private void butEngage_Click(object sender, RoutedEventArgs e)
         {
+            
             string[] allFoundMDBFiles = System.IO.Directory.GetFiles(tboxSelectedFolder.Text, "*.mdb", System.IO.SearchOption.AllDirectories);
-            Parallel.ForEach(allFoundMDBFiles.AsEnumerable(), new ParallelOptions { MaxDegreeOfParallelism = 4 }, curDB =>
+            string targetDatabase = _getItDbPath();
+            foreach (string curDB in allFoundMDBFiles)
                 {
-                    try
+                string statusUpdate = "Converting Granite Database Located At: " + curDB;
+                wait(1000);
+                myValue = statusUpdate;
+                //System.Windows.Forms.Application.DoEvents();
+                Dispatcher.Invoke((MethodInvoker)delegate { MyTextBlock.Text = statusUpdate; });
+                wait(1000);
+                try
                     {
-                        convertDb(curDB);
+                    convertDb(curDB, targetDatabase);
                     }
                     catch  (Exception ex)
                     {
                         System.Console.WriteLine(ex);
                     }
-                });
+                }
+            System.Windows.Forms.MessageBox.Show("Conversion Completed.");
+        }
+
+        
+
+        private void updateText(string text)
+        {
+            MyTextBlock.Text = text.ToString();
         }
 
         private string _getItDbPath()
@@ -75,47 +114,59 @@ namespace Granite_batch_convert_Csharp_VN
             return null;
         }
 
-        private void convertDb(string sourceDatabase)
+        private void convertDb(string sourceDatabase, string itpipesDatabase)
         {
 
             vb_dll_library_project_the_real_one.GraniteConvert granConverter = new vb_dll_library_project_the_real_one.GraniteConvert();
             OleDbConnection sourceConn = new OleDbConnection("Provider=Microsoft.Jet.OLEDB.4.0;User ID=Admin;Jet OLEDB:Database Password=dbadmin;Data Source=" + sourceDatabase);
 
-        
-            if (string.IsNullOrEmpty(resourceITPDatabase))
-                resourceITPDatabase  = _getItDbPath();
-
-            if (!File.Exists(resourceITPDatabase))
-            {
-                System.Windows.Forms.MessageBox.Show("Can't convert without an ITpipes database to use as a target");
-            }
-            string targetDatabase = resourceITPDatabase;
-            //if (File.Exists(targetDatabase)) { System.IO.File.Delete(targetDatabase); }
-            //File.Copy(resourceITPDatabase, targetDatabase);
-
-            OleDbConnection targetConn = new OleDbConnection("Provider=Microsoft.Jet.OLEDB.4.0;User ID=Admin; Data Source=" + targetDatabase);
-
             try
             {
-                granConverter.grabGranite(sourceConn, targetConn);
-            }
+                if (string.IsNullOrEmpty(resourceITPDatabase))
+                    resourceITPDatabase = itpipesDatabase;
+                if (resourceITPDatabase != null)
+                {
+                    if (!File.Exists(resourceITPDatabase))
+                    {
+                        System.Windows.Forms.MessageBox.Show("Can't convert without an ITpipes database to use as a target");
+                    }
+                    string targetDatabase = resourceITPDatabase;
+                    //if (File.Exists(targetDatabase)) { System.IO.File.Delete(targetDatabase); }
+                    //File.Copy(resourceITPDatabase, targetDatabase);
 
-            catch (Exception ex)
-            {
-                Console.WriteLine("Failed to Convert database: " + sourceDatabase + "\n\nSpecific Error: " + ex);
-                System.Windows.Forms.MessageBox.Show("Failed to Convert database: " + sourceDatabase + "\n\nSpecific Error: " + ex);
-                //File.Delete(targetDatabase);
+                    OleDbConnection targetConn = new OleDbConnection("Provider=Microsoft.Jet.OLEDB.4.0;User ID=Admin; Data Source=" + targetDatabase);
 
+                    try
+                    {
+                        granConverter.grabGranite(sourceConn, targetConn);
+                    }
+
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Failed to Convert database: " + sourceDatabase + "\n\nSpecific Error: " + ex);
+                        System.Windows.Forms.MessageBox.Show("Failed to Convert database: " + sourceDatabase + "\n\nSpecific Error: " + ex);
+                        //File.Delete(targetDatabase);
+
+                    }
+                    finally
+                    {
+                        sourceConn.Close();
+                        targetConn.Close();
+                        sourceConn.Dispose();
+                        targetConn.Dispose();
+                    }
+                }
+                else
+                {
+                    System.Windows.Forms.MessageBox.Show("Please pick an ITpipes Database.");
+                }
             }
-            finally
+            catch(Exception ex)
             {
-                sourceConn.Close();
-                targetConn.Close();
-                sourceConn.Dispose();
-                targetConn.Dispose();
+                System.Windows.Forms.MessageBox.Show("Failed to get database:\r\n\n" + ex);
             }
-            System.Windows.Forms.MessageBox.Show("Conversion Completed.");
-        }
+            }
+        
 
         private string formatITpipesDBName(string targetDBPath)
         {
@@ -124,6 +175,11 @@ namespace Granite_batch_convert_Csharp_VN
             returnFileName += "_ITpipes.mdb";
             return returnFileName;
         }
+        
 
+        private void TextBlock_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
     }
 }

@@ -281,8 +281,8 @@ Public Class GraniteConvert
             cmd.Parameters(10).Value = nothingToDBNull(item.Media_Number)
             cmd.Parameters(11).Value = nothingToDBNull(item.Flow_Control)
             cmd.Parameters(12).Value = nothingToDBNull(item.TVOperator)
-            'cmd.Parameters(13).Value = nothingToDBNull(item.PACP_Custom_1)
-            'cmd.Parameters(14).Value = nothingToDBNull(item.PACP_Custom_2)
+            cmd.Parameters(13).Value = nothingToDBNull(item.PACP_Custom_1)
+            cmd.Parameters(14).Value = nothingToDBNull(item.PACP_Custom_2)
             'cmd.Parameters(15).Value = nothingToDBNull(item.PACP_Custom_3)
             'cmd.Parameters(16).Value = nothingToDBNull(item.PACP_Custom_4)
             'cmd.Parameters(17).Value = nothingToDBNull(item.PACP_Custom_5)
@@ -400,8 +400,8 @@ Public Class GraniteConvert
         par(10).DbType = DbType.String 'media no
         par(11).DbType = DbType.String 'flow control
         par(12).DbType = DbType.String 'operator
-        'par(13).DbType = DbType.String 'cus 1
-        'par(14).DbType = DbType.String 'cus 2
+        par(13).DbType = DbType.String 'cus 1
+        par(14).DbType = DbType.String 'cus 2
         'par(15).DbType = DbType.String 'cus 3
         'par(16).DbType = DbType.String 'cus 4
         'par(17).DbType = DbType.String 'cus 5
@@ -704,6 +704,9 @@ Public Class GraniteConvert
             Inspections.Start_Time = nullDate(row("DATE_START"))
             Inspections.Weather = codeLookup(row("WEATHER"))
             Inspections.Sheet_Number = nullInteger(row("SHEET_NUMBER"))
+            Inspections.PACP_Custom_1 = nullInteger(row("Insp_No"))
+            Inspections.PACP_Custom_2 = nullInteger(row("Crew"))
+
 
             theAsset = assets.Find(Function(p) p.ML_ID = Inspections.ML_ID)
             Inspections.Parent_GUID = theAsset.Merge_GUID
